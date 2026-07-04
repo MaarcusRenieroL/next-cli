@@ -1,11 +1,13 @@
 import { PageHeader, Prose, Callout } from "@/components/mdx";
 import { DocFooter } from "@/components/mdx/doc-footer";
+import { ChangelogList, type ChangelogEntry } from "./changelog-list";
 
 export const metadata = { title: "Changelog" };
 
-const changes = [
+const changes: ChangelogEntry[] = [
   {
     version: "Unreleased",
+    month: "July 2026",
     summary:
       "Security hardening, real shadcn/ui scaffolding, dependency upgrades, and changelog documentation.",
     groups: [
@@ -40,6 +42,7 @@ const changes = [
   {
     version: "v1.0.1",
     date: "2026-07-03",
+    month: "July 2026",
     summary:
       "A release focused on making project setup and package installation more reliable.",
     groups: [
@@ -63,6 +66,7 @@ const changes = [
   },
   {
     version: "v1.0.0 and Earlier",
+    month: "Before July 2026",
     summary:
       "The initial public history of the CLI, marketing site, docs app, and shared UI package.",
     groups: [
@@ -108,46 +112,7 @@ export default function ChangelogPage() {
         </Callout>
       </Prose>
 
-      <div className="mt-8 max-w-3xl space-y-8">
-        {changes.map(change => (
-          <section
-            key={change.version}
-            className="border-t border-white/10 pt-7 first:border-t-0 first:pt-0"
-          >
-            <div className="mb-4">
-              <h2 className="text-2xl font-semibold tracking-tight text-white">
-                {change.version}
-              </h2>
-              {change.date && (
-                <p className="mt-1 text-sm font-medium text-indigo-300">
-                  {change.date}
-                </p>
-              )}
-              <p className="mt-2 text-sm leading-relaxed text-zinc-400">
-                {change.summary}
-              </p>
-            </div>
-
-            <div className="space-y-5">
-              {change.groups.map(group => (
-                <div key={group.title}>
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-zinc-300">
-                    {group.title}
-                  </h3>
-                  <ul className="space-y-2 text-sm leading-relaxed text-zinc-400">
-                    {group.items.map(item => (
-                      <li key={item} className="flex gap-2">
-                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      <ChangelogList changes={changes} />
 
       <DocFooter />
     </>

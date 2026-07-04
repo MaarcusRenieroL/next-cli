@@ -2,7 +2,7 @@
 
 All notable changes to this repository are documented here based on the git commit history.
 
-## Unreleased
+## v1.0.2 - 2026-07-04
 
 ### Security
 

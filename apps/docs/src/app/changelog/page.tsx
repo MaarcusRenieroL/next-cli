@@ -6,10 +6,11 @@ export const metadata = { title: "Changelog" };
 
 const changes: ChangelogEntry[] = [
   {
-    version: "Unreleased",
+    version: "v1.0.2",
+    date: "2026-07-04",
     month: "July 2026",
     summary:
-      "Security hardening, real shadcn/ui scaffolding, dependency upgrades, and changelog documentation.",
+      "Security hardening, real shadcn/ui scaffolding, dependency upgrades, and changelog documentation for the npm release.",
     groups: [
       {
         title: "Security",
@@ -107,8 +108,7 @@ export default function ChangelogPage() {
       <Prose>
         <Callout type="note" title="Based on git history">
           This page follows the repository changelogs generated from commit
-          history. The unreleased section reflects the current workspace
-          changes.
+          history. The latest section reflects the current npm release.
         </Callout>
       </Prose>
 

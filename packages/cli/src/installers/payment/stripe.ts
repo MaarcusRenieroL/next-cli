@@ -22,8 +22,9 @@ export const stripeInstaller: Installer = ({ targetDir, projectName, scopedAppNa
 
   const libContent = `// @ts-nocheck
 import Stripe from "stripe";
+import { env } from "@/env";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   typescript: true,
 });
 `;
@@ -33,17 +34,33 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
   const routeContent = `// @ts-nocheck
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
+import { env } from "@/env";
 import { stripe } from "@/libs/stripe";
 
+const checkoutSchema = z.object({
+  priceId: z.string().min(1),
+});
+
 export async function POST(request: Request) {
-  const { priceId } = await request.json();
+  const parsed = checkoutSchema.safeParse(await request.json().catch(() => null));
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid checkout request" }, { status: 400 });
+  }
+
+  const allowedPriceIds = env.STRIPE_PRICE_IDS.split(",").map((priceId) => priceId.trim()).filter(Boolean);
+
+  if (!allowedPriceIds.includes(parsed.data.priceId)) {
+    return NextResponse.json({ error: "Price is not available" }, { status: 400 });
+  }
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: \`\${process.env.NEXT_PUBLIC_APP_URL}/success\`,
-    cancel_url: \`\${process.env.NEXT_PUBLIC_APP_URL}/cancel\`,
+    line_items: [{ price: parsed.data.priceId, quantity: 1 }],
+    success_url: \`\${env.NEXT_PUBLIC_APP_URL}/success\`,
+    cancel_url: \`\${env.NEXT_PUBLIC_APP_URL}/cancel\`,
   });
 
   return NextResponse.json({ url: session.url });
@@ -55,6 +72,6 @@ export async function POST(request: Request) {
 
   fs.appendFileSync(
     path.join(projectDir, ".env"),
-    "\n\nSTRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY\nSTRIPE_WEBHOOK_SECRET=YOUR_STRIPE_WEBHOOK_SECRET\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY"
+    "\n\nSTRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY\nSTRIPE_WEBHOOK_SECRET=YOUR_STRIPE_WEBHOOK_SECRET\nSTRIPE_PRICE_IDS=price_your_allowed_price_id\nNEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY"
   );
 };

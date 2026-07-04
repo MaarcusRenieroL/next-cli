@@ -9,7 +9,7 @@ export const dependencyVersionMap = {
 
   // eslint
   eslint: "^8",
-  "eslint-config-next": "14.2.13",
+  "eslint-config-next": "16.2.10",
   "eslint-config-prettier": "^9.1.0",
   "eslint-plugin-check-file": "^2.8.0",
   "eslint-plugin-n": "^17.11.1",
@@ -23,7 +23,7 @@ export const dependencyVersionMap = {
   "dotenv-expand": "^11.0.6",
 
   // NextAuth.js
-  "next-auth": "^4.24.7",
+  "next-auth": "^4.24.14",
   "@auth/prisma-adapter": "^1.6.0",
   "@auth/drizzle-adapter": "^1.1.0",
 
@@ -43,8 +43,8 @@ export const dependencyVersionMap = {
   "@hono/zod-validator": "^0.2.2",
 
   // Drizzle
-  "drizzle-kit": "^0.24.0",
-  "drizzle-orm": "^0.33.0",
+  "drizzle-kit": "^0.31.10",
+  "drizzle-orm": "^0.45.2",
   "eslint-plugin-drizzle": "^0.2.3",
   "@planetscale/database": "^1.19.0",
 
@@ -56,9 +56,15 @@ export const dependencyVersionMap = {
 
   // TailwindCSS
   tailwindcss: "^3.4.3",
-  postcss: "^8.4.39",
+  postcss: "^8.5.16",
   prettier: "^3.3.2",
   "prettier-plugin-tailwindcss": "^0.6.5",
+  "tailwindcss-animate": "^1.0.7",
+
+  // shadcn/ui
+  "@radix-ui/react-slot": "^1.1.0",
+  "class-variance-authority": "^0.7.0",
+  "lucide-react": "^0.451.0",
 
   // tRPC
   "@tanstack/react-query": "^5.59.0",
@@ -95,7 +101,7 @@ export const dependencyVersionMap = {
 
   // Analytics
   "@vercel/analytics": "^1.5.0",
-  "@next/third-parties": "^14.2.13",
+  "@next/third-parties": "^15.5.16",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

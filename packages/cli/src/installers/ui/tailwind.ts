@@ -7,7 +7,7 @@ import { PKG_ROOT } from "@/constants/index.js";
 export const tailwindInstaller: Installer = ({ projectDir, scopedAppName }) => {
   addPackageDependency({
     projectDir,
-    dependencies: ["tailwindcss", "postcss", "prettier", "prettier-plugin-tailwindcss"],
+    dependencies: ["tailwindcss", "postcss", "prettier", "prettier-plugin-tailwindcss", "tailwindcss-animate"],
     devMode: true,
   });
 

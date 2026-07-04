@@ -1,10 +1,37 @@
 // @ts-nocheck
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 const items: { id: number; name: string }[] = [
   { id: 1, name: "Item 1" },
   { id: 2, name: "Item 2" },
 ];
+
+const itemCreateSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+});
+
+const itemUpdateSchema = itemCreateSchema.extend({
+  id: z.number().int().positive(),
+});
+
+const itemDeleteSchema = z.object({
+  id: z.number().int().positive(),
+});
+
+const requireApiSecret = (req: Request) => {
+  if (!process.env.API_SECRET) {
+    return NextResponse.json({ success: false, message: "API_SECRET is not configured" }, { status: 500 });
+  }
+
+  const token = req.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+
+  if (token !== process.env.API_SECRET) {
+    return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+  }
+
+  return null;
+};
 
 export async function GET() {
   return NextResponse.json(
@@ -19,13 +46,16 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name } = await req.json();
+    const authError = requireApiSecret(req);
+    if (authError) return authError;
 
-    if (!name) {
-      return NextResponse.json({ success: false, message: "Name is required" }, { status: 400 });
+    const parsed = itemCreateSchema.safeParse(await req.json());
+
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: "Invalid request payload" }, { status: 400 });
     }
 
-    const newItem = { id: items.length + 1, name };
+    const newItem = { id: items.length + 1, name: parsed.data.name };
     items.push(newItem);
 
     return NextResponse.json(
@@ -43,19 +73,22 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { id, name } = await req.json();
+    const authError = requireApiSecret(req);
+    if (authError) return authError;
 
-    if (!id || !name) {
-      return NextResponse.json({ success: false, message: "ID and name are required" }, { status: 400 });
+    const parsed = itemUpdateSchema.safeParse(await req.json());
+
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: "Invalid request payload" }, { status: 400 });
     }
 
-    const existingItem = items.find((item) => item.id === id);
+    const existingItem = items.find((item) => item.id === parsed.data.id);
 
     if (!existingItem) {
       return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });
     }
 
-    existingItem.name = name;
+    existingItem.name = parsed.data.name;
 
     return NextResponse.json(
       {
@@ -72,13 +105,16 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const { id } = await req.json();
+    const authError = requireApiSecret(req);
+    if (authError) return authError;
 
-    if (!id) {
-      return NextResponse.json({ success: false, message: "ID is required" }, { status: 400 });
+    const parsed = itemDeleteSchema.safeParse(await req.json());
+
+    if (!parsed.success) {
+      return NextResponse.json({ success: false, message: "Invalid request payload" }, { status: 400 });
     }
 
-    const itemIndex = items.findIndex((item) => item.id === id);
+    const itemIndex = items.findIndex((item) => item.id === parsed.data.id);
 
     if (itemIndex === -1) {
       return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });

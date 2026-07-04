@@ -1,4 +1,4 @@
-import { AuthType, CLIOptions, DatabaseType, EmailType } from "@/types/global.js";
+import { API, AuthType, CLIOptions, DatabaseType, EmailType, Payment } from "@/types/global.js";
 import { addPackageDependency } from "@/utils/add-package-dependency.js";
 import fs from "fs-extra";
 import path from "path";
@@ -82,13 +82,73 @@ const emailEnvironment: Record<Exclude<EmailType, "none" | undefined | null>, En
   },
 };
 
+const paymentEnvironment: Record<Exclude<Payment, "none" | undefined | null>, EnvironmentConfigObject> = {
+  stripe: {
+    server: {
+      STRIPE_SECRET_KEY: "z.string().min(1)",
+      STRIPE_WEBHOOK_SECRET: "z.string().min(1)",
+      STRIPE_PRICE_IDS: "z.string().min(1)",
+    },
+    client: {
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "z.string().min(1)",
+    },
+  },
+  paypal: {
+    server: {
+      PAYPAL_CLIENT_SECRET: "z.string().min(1)",
+    },
+    client: {
+      NEXT_PUBLIC_PAYPAL_CLIENT_ID: "z.string().min(1)",
+    },
+  },
+  "lemon-squeezy": {
+    server: {
+      LEMONSQUEEZY_API_KEY: "z.string().min(1)",
+      LEMONSQUEEZY_STORE_ID: "z.string().min(1)",
+      LEMONSQUEEZY_WEBHOOK_SECRET: "z.string().min(1)",
+    },
+  },
+  razorpay: {
+    server: {
+      RAZORPAY_KEY_ID: "z.string().min(1)",
+      RAZORPAY_KEY_SECRET: "z.string().min(1)",
+    },
+    client: {
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: "z.string().min(1)",
+    },
+  },
+};
+
+const apiEnvironment: Record<Exclude<API, "none" | undefined | null>, EnvironmentConfigObject> = {
+  hono: {
+    server: {
+      API_SECRET: "z.string().min(32)",
+    },
+  },
+  rest: {
+    server: {
+      API_SECRET: "z.string().min(32)",
+    },
+  },
+  trpc: {
+    server: {
+      API_SECRET: "z.string().min(32)",
+    },
+  },
+  graphql: {
+    server: {
+      API_SECRET: "z.string().min(32)",
+    },
+  },
+};
+
 export const setupEnv = ({ projectDir, scopedAppName, ...options }: CLIOptions) => {
   const envDir = path.join(projectDir, scopedAppName === "src" ? "src" : "", "env");
 
   // Ensure required dependencies are installed
   addPackageDependency({
     projectDir,
-    dependencies: ["dotenv", "dotenv-expand", "@t3-oss/env-nextjs"],
+    dependencies: ["dotenv", "dotenv-expand", "@t3-oss/env-nextjs", "zod"],
     devMode: false,
   });
 
@@ -105,7 +165,7 @@ export const setupEnv = ({ projectDir, scopedAppName, ...options }: CLIOptions) 
       },
       client: {
         NEXT_PUBLIC_NODE_ENV: 'z.enum(["development", "test", "production"]).default("development")',
-        NEXT_PUBLIC_APP_URL: 'z.string().url().default(process.env.NEXT_PUBLIC_APP_URL || "")',
+        NEXT_PUBLIC_APP_URL: 'z.string().url().default(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000")',
         NEXT_PUBLIC_VERCEL_URL: "z.string().optional()",
       },
       runtimeEnv: {},
@@ -130,6 +190,18 @@ export const setupEnv = ({ projectDir, scopedAppName, ...options }: CLIOptions) 
       const emailVars = emailEnvironment[options.email as keyof typeof emailEnvironment] || {};
       Object.assign(envOptions.client, emailVars.client || {});
       Object.assign(envOptions.server, emailVars.server || {});
+    }
+
+    if (options.payment && options.payment !== "none") {
+      const paymentVars = paymentEnvironment[options.payment as keyof typeof paymentEnvironment] || {};
+      Object.assign(envOptions.client, paymentVars.client || {});
+      Object.assign(envOptions.server, paymentVars.server || {});
+    }
+
+    if (options.api && options.api !== "none") {
+      const apiVars = apiEnvironment[options.api as keyof typeof apiEnvironment] || {};
+      Object.assign(envOptions.client, apiVars.client || {});
+      Object.assign(envOptions.server, apiVars.server || {});
     }
 
     // Populate runtimeEnv dynamically

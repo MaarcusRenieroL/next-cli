@@ -13,19 +13,19 @@
     "@repo/ui": "workspace:*",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.9",
-    "next": "14.2.15",
-    "next-themes": "^0.3.0",
-    "react": "^18",
-    "react-dom": "^18",
+    "next": "16.2.10",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "tailwind-merge": "^2.5.3"
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.15",
-    "postcss": "^8",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "16.2.10",
+    "postcss": "^8.5.16",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

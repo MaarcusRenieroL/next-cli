@@ -22,10 +22,11 @@ export const razorpayInstaller: Installer = ({ targetDir, projectName, scopedApp
 
   const libContent = `// @ts-nocheck
 import Razorpay from "razorpay";
+import { env } from "@/env";
 
 export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  key_id: env.RAZORPAY_KEY_ID,
+  key_secret: env.RAZORPAY_KEY_SECRET,
 });
 `;
   const libDest = path.join(base, "libs/razorpay.ts");
@@ -34,15 +35,33 @@ export const razorpay = new Razorpay({
 
   const routeContent = `// @ts-nocheck
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
 import { razorpay } from "@/libs/razorpay";
 
+const orderSchema = z.object({
+  planId: z.enum(["starter"]),
+});
+
+const plans = {
+  starter: {
+    amountInPaise: 9900,
+    currency: "INR",
+  },
+} as const;
+
 export async function POST(request: Request) {
-  const { amount } = await request.json();
+  const parsed = orderSchema.safeParse(await request.json().catch(() => null));
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid order request" }, { status: 400 });
+  }
+
+  const plan = plans[parsed.data.planId];
 
   const order = await razorpay.orders.create({
-    amount: Math.round(amount * 100),
-    currency: "INR",
+    amount: plan.amountInPaise,
+    currency: plan.currency,
   });
 
   return NextResponse.json(order);

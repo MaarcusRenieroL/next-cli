@@ -49,5 +49,7 @@ export const trpcInstaller: Installer = ({ projectDir, scopedAppName, empty }) =
       );
       fs.writeFileSync(providerIndexPathInDest, 'import { TrpcProvider } from "@/providers/trpc-provider"\n' + updatedContent, "utf-8");
     }
+
+    fs.appendFileSync(path.join(projectDir, ".env"), "\n\nAPI_SECRET=replace-with-at-least-32-random-characters");
   }
 };

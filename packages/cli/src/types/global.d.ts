@@ -1,4 +1,5 @@
 export type AuthType = "next-auth" | "clerk" | "kinde" | "none" | null | undefined;
+export type Language = "typescript";
 export type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 export type PackageManagerX = "npx" | "pnpx" | "yarn" | "bunx";
 export type UILibrary = "shadcn-ui" | "radix-ui" | "chakra-ui" | "none" | null | undefined;
@@ -45,6 +46,7 @@ export const availablePackages = [
   "drizzle",
   "hono",
   "tailwind",
+  "shadcn-ui",
   "trpc",
   "graphql",
   "next-auth",

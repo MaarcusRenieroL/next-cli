@@ -29,5 +29,7 @@ export const restApiInstaller: Installer = ({ targetDir, projectName, scopedAppN
     const restApiApiDest = path.join(projectDir, scopedAppName === "src" ? "src" : "", "app/api/test/route.ts");
     fs.mkdirSync(path.dirname(restApiApiDest), { recursive: true });
     fs.writeFileSync(restApiApiDest, apiRouteContent);
+
+    fs.appendFileSync(path.join(projectDir, ".env"), "\n\nAPI_SECRET=replace-with-at-least-32-random-characters");
   }
 };

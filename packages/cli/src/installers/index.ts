@@ -3,6 +3,7 @@ import { honoInstaller } from "@/installers/api/hono.js";
 import { prismaInstaller } from "@/installers/orm/prisma.js";
 import { drizzleInstaller } from "@/installers/orm/drizzle.js";
 import { tailwindInstaller } from "@/installers/ui/tailwind.js";
+import { shadcnInstaller } from "@/installers/ui/shadcn.js";
 import { nextAuthInstaller } from "@/installers/auth/next-auth.js";
 import { clerkInstaller } from "@/installers/auth/clerk.js";
 import { kindeInstaller } from "@/installers/auth/kinde.js";
@@ -37,6 +38,10 @@ export const buildPkgInstallerMap = (packages: AvailablePackages[]): PkgInstalle
   tailwind: {
     inUse: packages.includes("tailwind"),
     installer: tailwindInstaller,
+  },
+  "shadcn-ui": {
+    inUse: packages.includes("shadcn-ui"),
+    installer: shadcnInstaller,
   },
   eslint: {
     inUse: packages.includes("eslint"),

@@ -35,6 +35,7 @@ export const nav: NavGroup[] = [
   {
     title: "Reference",
     items: [
+      { title: "Changelog", href: "/changelog" },
       { title: "FAQ", href: "/faq" },
       { title: "Contributing", href: "/contributing" },
     ],

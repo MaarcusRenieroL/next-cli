@@ -38,5 +38,7 @@ export const honoInstaller: Installer = ({ targetDir, projectName, scopedAppName
     const honoApiDest = path.join(projectDir, scopedAppName === "src" ? "src" : "", "app/api/[[...route]]/route.ts");
     fs.mkdirSync(path.dirname(honoApiDest), { recursive: true });
     fs.writeFileSync(honoApiDest, apiRouteContent);
+
+    fs.appendFileSync(path.join(projectDir, ".env"), "\n\nAPI_SECRET=replace-with-at-least-32-random-characters");
   }
 };

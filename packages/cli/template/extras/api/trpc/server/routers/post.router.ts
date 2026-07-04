@@ -1,4 +1,4 @@
-import { router, publicProcedure } from "../trpc";
+import { privateProcedure, publicProcedure, router } from "../trpc";
 import { z } from "zod";
 
 // Simple in-memory database
@@ -21,22 +21,24 @@ export const postRouter = router({
   }),
 
   // Create a new post
-  create: publicProcedure.input(z.object({ title: z.string(), content: z.string() })).mutation(({ input }) => {
+  create: privateProcedure.input(z.object({ title: z.string().trim().min(1).max(120), content: z.string().trim().min(1).max(5000) })).mutation(({ input }) => {
     const newPost = { id: posts.length + 1, ...input };
     posts.push(newPost);
     return newPost;
   }),
 
   // Update an existing post
-  update: publicProcedure.input(z.object({ id: z.number(), title: z.string(), content: z.string() })).mutation(({ input }) => {
-    const index = posts.findIndex((p) => p.id === input.id);
-    if (index === -1) throw new Error("Post not found");
-    posts[index] = { ...posts[index], ...input };
-    return posts[index];
-  }),
+  update: privateProcedure
+    .input(z.object({ id: z.number().int().positive(), title: z.string().trim().min(1).max(120), content: z.string().trim().min(1).max(5000) }))
+    .mutation(({ input }) => {
+      const index = posts.findIndex((p) => p.id === input.id);
+      if (index === -1) throw new Error("Post not found");
+      posts[index] = { ...posts[index], ...input };
+      return posts[index];
+    }),
 
   // Delete a post
-  delete: publicProcedure.input(z.number()).mutation(({ input }) => {
+  delete: privateProcedure.input(z.number().int().positive()).mutation(({ input }) => {
     const index = posts.findIndex((p) => p.id === input);
     if (index === -1) throw new Error("Post not found");
     const deletedPost = posts[index];

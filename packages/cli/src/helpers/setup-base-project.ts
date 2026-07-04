@@ -6,11 +6,12 @@ import path from "path";
 
 import { PKG_ROOT } from "@/constants/index.js";
 import { CLIOptions } from "@/types/global.js";
+import { getProjectDir, isProtectedProjectDir } from "./project-path.js";
 
 // This bootstraps the base Next.js application
-export const scaffoldProject = async ({ projectName, targetDir, empty, scopedAppName }: CLIOptions) => {
+export const scaffoldProject = async ({ projectName, targetDir, projectDir: configuredProjectDir, empty, scopedAppName }: CLIOptions) => {
   try {
-    const projectDir = targetDir ? path.join(targetDir, projectName) : projectName;
+    const projectDir = configuredProjectDir || getProjectDir(targetDir, projectName);
     const srcDir = path.join(PKG_ROOT, "template/base");
 
     const spinner = ora(`Scaffolding in: ${projectDir}...\n`).start();
@@ -43,7 +44,7 @@ export const scaffoldProject = async ({ projectName, targetDir, empty, scopedApp
           process.exit(1);
         }
 
-        const overwriteAction = overwriteDir === "clear" ? "clear the directory" : "overwrite conflicting files";
+        const overwriteAction = overwriteDir === "clear" ? `clear ${projectDir}` : "overwrite conflicting files";
 
         const confirmOverwriteDir = await confirm({
           message: `Are you sure you want to ${overwriteAction}?`,
@@ -56,6 +57,11 @@ export const scaffoldProject = async ({ projectName, targetDir, empty, scopedApp
         }
 
         if (overwriteDir === "clear") {
+          if (isProtectedProjectDir(projectDir)) {
+            spinner.fail(`Refusing to clear protected directory: ${projectDir}`);
+            process.exit(1);
+          }
+
           spinner.info(`Emptying ${chalk.cyan.bold(projectName)} and creating Nextkit app..\n`);
           fs.emptyDirSync(projectDir);
         }

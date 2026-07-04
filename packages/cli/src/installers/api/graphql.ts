@@ -42,10 +42,26 @@ const { handleRequest } = createYoga({
   fetchAPI: { Response },
 });
 
-export { handleRequest as GET, handleRequest as POST, handleRequest as OPTIONS };
+const handleAuthenticatedRequest = (request: Request, context: unknown) => {
+  if (!process.env.API_SECRET) {
+    return new Response(JSON.stringify({ error: "API_SECRET is not configured" }), { status: 500 });
+  }
+
+  const token = request.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+
+  if (token !== process.env.API_SECRET) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+
+  return handleRequest(request, context);
+};
+
+export { handleAuthenticatedRequest as GET, handleAuthenticatedRequest as POST, handleRequest as OPTIONS };
 `;
 
   const routeDest = path.join(base, "app/api/graphql/route.ts");
   fs.mkdirSync(path.dirname(routeDest), { recursive: true });
   fs.writeFileSync(routeDest, routeContent);
+
+  fs.appendFileSync(path.join(projectDir, ".env"), "\n\nAPI_SECRET=replace-with-at-least-32-random-characters");
 };

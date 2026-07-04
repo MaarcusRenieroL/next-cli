@@ -1,4 +1,4 @@
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 
 import { Context } from "./trpc/context";
@@ -20,14 +20,20 @@ const t = initTRPC.context<Context>().create({
 });
 
 export const middleware = t.middleware;
-export const withAuth = middleware(async ({ next }) => {
-  // add your authentication middleware here
+export const withAuth = middleware(async ({ ctx, next }) => {
+  if (!process.env.API_SECRET) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "API_SECRET is not configured" });
+  }
+
+  const token = ctx.req?.headers.get("authorization")?.replace(/^Bearer\\s+/i, "");
+
+  if (token !== process.env.API_SECRET) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
   return next({
     ctx: {
-      session: {
-        userId: 1,
-        name: "test",
-      },
+      session: { authorized: true },
     },
   });
 });

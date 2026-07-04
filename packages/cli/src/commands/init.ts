@@ -5,13 +5,12 @@ import chalk from "chalk";
 import { AvailablePackages, CLIOptions, DatabaseProvider, PackageManager, PackageManagerX } from "../types/global.js";
 import { exit, printSuccessMessage } from "../utils/message.js";
 import { setImportAlias } from "@/helpers/set-import-alias.js";
-import path from "path";
 import { removeTsNoCheck } from "@/helpers/remove-ts-no-check.js";
 import ora from "ora";
-import { existsSync } from "fs";
 import { execSync } from "child_process";
 import { getInstallCommand } from "@/utils/index.js";
 import { logger } from "@/utils/logger.js";
+import { getProjectDir, validateProjectName, validateTargetDir } from "@/helpers/project-path.js";
 
 const packageManagerXMap: Record<PackageManager, PackageManagerX> = {
   yarn: "yarn",
@@ -21,7 +20,6 @@ const packageManagerXMap: Record<PackageManager, PackageManagerX> = {
 };
 
 // Helper to handle common input logic
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function getInput<T extends any | boolean>(message: string, choices?: { name: string; value: T }[], defaultValue?: T): Promise<T> {
   if (choices) {
     return await select({ message, choices, default: defaultValue });
@@ -38,6 +36,8 @@ export async function init(options: CLIOptions) {
   try {
     options.projectName ??= await getInput("What is your project name? ›", undefined, "cli-app");
     options.targetDir ??= await getInput("Where do you want to create the project? (path) ›", undefined, process.cwd());
+    options.projectName = validateProjectName(options.projectName);
+    options.targetDir = validateTargetDir(options.targetDir);
 
     options.eslint ??= await getInput(
       `Would you like to ${chalk.blueBright("ESLint")}? ›`,
@@ -171,13 +171,19 @@ export async function init(options: CLIOptions) {
       { name: "Yes", value: true },
     ]);
 
+    if (options.uiLibrary === "shadcn-ui" && !options.tailwind) {
+      logger.info("shadcn/ui requires Tailwind CSS, so Tailwind has been enabled.");
+      options.tailwind = true;
+    }
+
     // setup the project
-    options.projectDir = options.targetDir ? path.join(options.targetDir, options.projectName) : options.projectName;
+    options.projectDir = getProjectDir(options.targetDir, options.projectName);
 
     const packages: AvailablePackages[] = [];
 
     if (options.eslint) packages.push("eslint");
     if (options.tailwind) packages.push("tailwind");
+    if (options.uiLibrary === "shadcn-ui") packages.push("shadcn-ui");
 
     if (options.database !== "none") {
       switch (options.orm) {
@@ -294,25 +300,13 @@ export async function init(options: CLIOptions) {
         execSync(command, { stdio: "ignore", cwd: options.projectDir });
         spinner.succeed(chalk.green("Successfully installed dependencies"));
       } catch (error) {
-        // pnpm v10+ exits non-zero when freshly added dependencies ship build
-        // scripts that haven't been approved (ERR_PNPM_IGNORED_BUILDS). The
-        // packages are already installed, so approve them non-interactively to
-        // run their build scripts (e.g. Prisma's client generation).
-        const nodeModulesExists = existsSync(path.join(options.projectDir, "node_modules"));
-        if (options.packageManager === "pnpm" && nodeModulesExists) {
-          try {
-            execSync("pnpm approve-builds --all", { stdio: "ignore", cwd: options.projectDir });
-            spinner.succeed(chalk.green("Successfully installed dependencies"));
-          } catch {
-            spinner.fail(chalk.red("Failed to install dependencies"));
-            logger.error(`Try running "${command}" manually inside ${options.projectName}.`);
-          }
-        } else {
-          spinner.fail(chalk.red("Failed to install dependencies"));
-          logger.error(`Try running "${command}" manually inside ${options.projectName}.`);
-          if (error instanceof Error) {
-            logger.error(error.message);
-          }
+        spinner.fail(chalk.red("Failed to install dependencies"));
+        logger.error(`Try running "${command}" manually inside ${options.projectDir}.`);
+        if (options.packageManager === "pnpm") {
+          logger.info("If pnpm asks to approve build scripts, review the package list before approving them.");
+        }
+        if (error instanceof Error) {
+          logger.error(error.message);
         }
       }
     }
